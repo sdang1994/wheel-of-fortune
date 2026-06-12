@@ -171,7 +171,8 @@
 
 <script>
 // 카카오 실제 가게페이지 링크 확보 + 음식점만 (비음식 오매칭 제외)
-const NONFOOD = new Set(["편의점","인쇄,복사","문구,사무용품","교통시설","외환,환율","패션","숙박","관광,명소","부동산서비스","금융서비스","사진","여가시설","식품"]);
+// 주점은 데이터엔 남기되 돌림판/필터 노출에서만 제외
+const NONFOOD = new Set(["주점","편의점","인쇄,복사","문구,사무용품","교통시설","외환,환율","패션","숙박","관광,명소","부동산서비스","금융서비스","사진","여가시설","식품"]);
 const ALL = (window.RESTAURANT_DATA && window.RESTAURANT_DATA.restaurants) || [];
 const DATA = ALL.filter(r => r.kakaoPlaceUrl && !NONFOOD.has(r.category));
 const PALETTE = ["#ff5a7a","#ffd166","#2ec4b6","#5a8dff","#c77dff","#ff9f5a","#06d6a0","#f15bb5","#4cc9f0","#fca311"];
