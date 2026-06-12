@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>명동 점심 돌림판 🍜</title>
+<title>명동 식당 돌림판 🍜</title>
 <script src="restaurants.js"></script>
 <style>
   :root {
@@ -65,10 +65,16 @@
     box-shadow: 0 18px 50px rgba(0,0,0,.45), inset 0 0 0 8px rgba(255,255,255,.04); }
   .hub {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    width: 64px; height: 64px; border-radius: 50%; background: var(--bg2);
-    border: 4px solid var(--accent2); display: flex; align-items: center; justify-content: center;
-    font-size: 24px; z-index: 4; box-shadow: 0 4px 14px rgba(0,0,0,.5);
+    width: 104px; height: 104px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #ff8a5a);
+    border: 5px solid var(--bg2); color: #fff;
+    font-size: 19px; font-weight: 800; letter-spacing: 1px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; z-index: 4;
+    box-shadow: 0 6px 22px rgba(255,90,122,.5); transition: transform .12s, filter .12s;
   }
+  .hub:hover { transform: translate(-50%,-50%) scale(1.07); filter: brightness(1.05); }
+  .hub:active { transform: translate(-50%,-50%) scale(.95); }
+  .hub:disabled { opacity: .55; cursor: not-allowed; transform: translate(-50%,-50%); }
 
   .spinbtn {
     margin-top: 18px; width: 100%; max-width: 420px; display: block; margin-left: auto; margin-right: auto;
@@ -121,8 +127,8 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>🍜 명동 점심 돌림판</h1>
-    <div class="sub">스테이트타워남산(서울 중구 퇴계로 100) 반경 400m · 오늘 점심 뭐 먹지?</div>
+    <h1>🍜 명동 식당 돌림판</h1>
+    <div class="sub">스테이트타워남산(서울 중구 퇴계로 100) 반경 400m · 오늘 뭐 먹지?</div>
     <div class="meta">카카오 실가게링크 보유 <b id="total">0</b>곳 · 좌표검증 직선거리 ≤400m · 별점·카테고리 필터 · 당첨 시 카카오맵 바로가기</div>
   </header>
 
@@ -143,9 +149,8 @@
       <div class="wheelbox">
         <div class="pointer"></div>
         <canvas id="wheel" width="800" height="800"></canvas>
-        <div class="hub">🍽️</div>
+        <button class="hub" id="spin">돌리기</button>
       </div>
-      <button class="spinbtn" id="spin">돌리기!</button>
     </div>
 
     <div class="panel">

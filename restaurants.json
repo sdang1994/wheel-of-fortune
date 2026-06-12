@@ -5451,7 +5451,7 @@
     {
       "id": 359,
       "name": "만만",
-      "category": "���식",
+      "category": "중식",
       "distance_m": 348,
       "lat": 37.558466,
       "lon": 126.9796098,
@@ -5463,7 +5463,7 @@
       "address": "서울 중구 회현동1가 183-8 1층",
       "rating": 3.2,
       "ratingCount": 32,
-      "kakaoCategory": "���국요리",
+      "kakaoCategory": "중국요리",
       "img": "https://t1.daumcdn.net/local/kakaomapPhoto/review/3172c10bbfa165c96fff2f659acb3c4429751c39?original"
     },
     {
