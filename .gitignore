@@ -1,0 +1,7 @@
+# Kakao REST key (never commit)
+kakao_key.txt
+
+# OS / editor
+.DS_Store
+*.log
+node_modules/

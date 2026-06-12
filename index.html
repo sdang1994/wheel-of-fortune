@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>명동 점심 돌림판 🍜</title>
+<script src="restaurants.js"></script>
+<style>
+  :root {
+    --bg: #0f1020;
+    --bg2: #1a1b34;
+    --card: #20223f;
+    --ink: #f4f4fb;
+    --muted: #9b9cc4;
+    --accent: #ff5a7a;
+    --accent2: #ffd166;
+    --line: #34365f;
+    --good: #2ec4b6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Apple SD Gothic Neo", "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #2a1c46 0%, transparent 55%),
+      radial-gradient(1000px 500px at 110% 10%, #15324a 0%, transparent 50%),
+      var(--bg);
+    min-height: 100vh;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 28px 18px 64px; }
+  header h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -0.5px; }
+  header .sub { color: var(--muted); font-size: 14px; margin-bottom: 6px; }
+  header .meta { color: var(--muted); font-size: 12px; }
+  header .meta b { color: var(--accent2); }
+
+  .filterbar { display: flex; flex-direction: column; gap: 14px; margin: 22px 0 8px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
+  .filter-group { display: flex; flex-direction: column; gap: 9px; }
+  .filter-group + .filter-group { border-top: 1px dashed var(--line); padding-top: 14px; }
+  .fg-label { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .filter-meta { font-size: 12px; color: var(--muted); text-align: right; }
+  .filter-meta b { color: var(--accent2); font-size: 14px; }
+  .chip.rate.active { background: var(--accent2); border-color: var(--accent2); color: #1a1300; }
+  .chip {
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    padding: 7px 13px; border-radius: 999px; cursor: pointer; font-size: 13px;
+    transition: .15s; user-select: none;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .chip .n { opacity: .65; font-size: 11px; margin-left: 4px; }
+
+  .stage { display: grid; grid-template-columns: 1fr; gap: 22px; align-items: start; margin-top: 18px; }
+  @media (min-width: 760px) { .stage { grid-template-columns: 420px 1fr; } }
+
+  .wheelbox { position: relative; width: 100%; max-width: 420px; margin: 0 auto; }
+  .pointer {
+    position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent;
+    border-top: 26px solid var(--accent2); z-index: 5; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5));
+  }
+  canvas { width: 100%; height: auto; display: block; border-radius: 50%;
+    box-shadow: 0 18px 50px rgba(0,0,0,.45), inset 0 0 0 8px rgba(255,255,255,.04); }
+  .hub {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 64px; height: 64px; border-radius: 50%; background: var(--bg2);
+    border: 4px solid var(--accent2); display: flex; align-items: center; justify-content: center;
+    font-size: 24px; z-index: 4; box-shadow: 0 4px 14px rgba(0,0,0,.5);
+  }
+
+  .spinbtn {
+    margin-top: 18px; width: 100%; max-width: 420px; display: block; margin-left: auto; margin-right: auto;
+    padding: 15px; font-size: 18px; font-weight: 800; color: #fff; cursor: pointer;
+    border: none; border-radius: 14px; letter-spacing: .5px;
+    background: linear-gradient(135deg, var(--accent), #ff8a5a);
+    box-shadow: 0 8px 22px rgba(255,90,122,.4); transition: .15s;
+  }
+  .spinbtn:hover { transform: translateY(-2px); }
+  .spinbtn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+  .panel { display: flex; flex-direction: column; gap: 16px; }
+  .result {
+    background: linear-gradient(180deg, var(--card), #191b35);
+    border: 1px solid var(--line); border-radius: 18px; padding: 22px; min-height: 180px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .result .empty { color: var(--muted); text-align: center; font-size: 15px; line-height: 1.7; }
+  .result .cat { font-size: 12px; color: var(--bg); background: var(--accent2);
+    display: inline-block; padding: 3px 10px; border-radius: 999px; font-weight: 700; margin-bottom: 10px; align-self: flex-start; }
+  .result h2 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.5px; }
+  .result .rating { margin: 2px 0 10px; font-size: 16px; }
+  .result .rating .stars { color: var(--accent2); letter-spacing: 1px; }
+  .result .rating b { color: var(--ink); font-size: 18px; }
+  .result .rating .rc { color: var(--muted); font-size: 12px; margin-left: 4px; }
+  .result .rating.rc-none { color: var(--muted); font-size: 12px; }
+  .result .sig { color: var(--accent2); font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .result .note { color: var(--muted); font-size: 13px; margin-bottom: 16px; min-height: 16px; }
+  .result a.naver {
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none; align-self: flex-start;
+    background: var(--good); color: #03201d; font-weight: 800; padding: 11px 16px; border-radius: 12px; font-size: 15px;
+    transition: .15s;
+  }
+  .result a.naver:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .result .alts { margin-top: 12px; font-size: 12px; color: var(--muted); }
+  .result .alts a { color: var(--accent2); text-decoration: none; }
+  .result .alts a:hover { text-decoration: underline; }
+
+  .history h3 { font-size: 13px; color: var(--muted); margin: 4px 0 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .history ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .history li { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+  .history li a { color: var(--ink); text-decoration: none; }
+  .history li a:hover { color: var(--accent2); }
+  .history li .t { font-variant-numeric: tabular-nums; opacity: .6; font-size: 11px; }
+
+  footer { margin-top: 40px; text-align: center; color: var(--muted); font-size: 12px; }
+  footer a { color: var(--accent2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🍜 명동 점심 돌림판</h1>
+    <div class="sub">스테이트타워남산(서울 중구 퇴계로 100) 반경 400m · 오늘 점심 뭐 먹지?</div>
+    <div class="meta">카카오 실가게링크 보유 <b id="total">0</b>곳 · 좌표검증 직선거리 ≤400m · 별점·카테고리 필터 · 당첨 시 카카오맵 바로가기</div>
+  </header>
+
+  <div class="filterbar">
+    <div class="filter-group">
+      <div class="fg-label">⭐ 최소 별점</div>
+      <div class="chips" id="ratingFilters"></div>
+    </div>
+    <div class="filter-group">
+      <div class="fg-label">🍽️ 카테고리</div>
+      <div class="chips" id="catFilters"></div>
+    </div>
+    <div class="filter-meta"><b id="poolCount">0</b>곳이 돌림판에 올라가요</div>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="wheelbox">
+        <div class="pointer"></div>
+        <canvas id="wheel" width="800" height="800"></canvas>
+        <div class="hub">🍽️</div>
+      </div>
+      <button class="spinbtn" id="spin">돌리기!</button>
+    </div>
+
+    <div class="panel">
+      <div class="result" id="result">
+        <div class="empty">버튼을 눌러 돌림판을 돌려보세요.<br/>카테고리로 메뉴를 좁힐 수 있어요.</div>
+      </div>
+      <div class="history">
+        <h3>최근 뽑기</h3>
+        <ul id="history"></ul>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    데이터: <a href="restaurants.json">restaurants.json</a> · OSM 좌표 직선거리 + 카카오 무키 별점/링크. 영업여부는 방문 전 카카오맵에서 확인하세요.
+  </footer>
+</div>
+
+<script>
+// 카카오 실제 가게페이지 링크 확보 + 음식점만 (비음식 오매칭 제외)
+const NONFOOD = new Set(["편의점","인쇄,복사","문구,사무용품","교통시설","외환,환율","패션","숙박","관광,명소","부동산서비스","금융서비스","사진","여가시설","식품"]);
+const ALL = (window.RESTAURANT_DATA && window.RESTAURANT_DATA.restaurants) || [];
+const DATA = ALL.filter(r => r.kakaoPlaceUrl && !NONFOOD.has(r.category));
+const PALETTE = ["#ff5a7a","#ffd166","#2ec4b6","#5a8dff","#c77dff","#ff9f5a","#06d6a0","#f15bb5","#4cc9f0","#fca311"];
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const SIZE = 800, R = SIZE/2;
+let pool = DATA.slice();
+let rotation = 0;       // radians
+let spinning = false;
+let activeCat = "전체";
+let minRating = 0;   // 최소 별점
+
+document.getElementById("total").textContent = DATA.length;
+
+// ---- 필터 정의 ----
+const RATINGS = [
+  { label: "전체", v: 0 }, { label: "⭐3.0+", v: 3.0 }, { label: "⭐3.5+", v: 3.5 },
+  { label: "⭐4.0+", v: 4.0 }, { label: "⭐4.5+", v: 4.5 },
+];
+const cats = ["전체", ...Array.from(new Set(DATA.map(d => d.category)))];
+
+// 별점 필터: minRating>0 이면 그 이상 별점 보유 가게만 (별점 없는 곳 제외)
+const passRating = (d, m) => m <= 0 ? true : (d.rating != null && d.rating >= m);
+const passCat = (d, c) => c === "전체" ? true : d.category === c;
+
+function computePool() {
+  return DATA.filter(d => passCat(d, activeCat) && passRating(d, minRating));
+}
+
+const catEl = document.getElementById("catFilters");
+const rateEl = document.getElementById("ratingFilters");
+
+function renderChips() {
+  // 별점 칩 — 현재 카테고리 기준 개수
+  rateEl.innerHTML = "";
+  RATINGS.forEach(rt => {
+    const n = DATA.filter(d => passCat(d, activeCat) && passRating(d, rt.v)).length;
+    const b = document.createElement("button");
+    b.className = "chip rate" + (rt.v === minRating ? " active" : "");
+    b.innerHTML = rt.label + ' <span class="n">' + n + '</span>';
+    b.onclick = () => { if (spinning) return; minRating = rt.v; applyFilters(); };
+    rateEl.appendChild(b);
+  });
+  // 카테고리 칩 — 현재 별점 기준 개수
+  catEl.innerHTML = "";
+  cats.forEach(c => {
+    const n = DATA.filter(d => passCat(d, c) && passRating(d, minRating)).length;
+    const b = document.createElement("button");
+    b.className = "chip" + (c === activeCat ? " active" : "");
+    b.innerHTML = c + ' <span class="n">' + n + '</span>';
+    b.onclick = () => { if (spinning) return; activeCat = c; applyFilters(); };
+    catEl.appendChild(b);
+  });
+}
+
+function applyFilters() {
+  pool = computePool();
+  document.getElementById("poolCount").textContent = pool.length;
+  rotation = 0;
+  renderChips();
+  draw();
+}
+
+// ---- draw wheel ----
+function draw() {
+  ctx.clearRect(0,0,SIZE,SIZE);
+  const n = pool.length;
+  if (n === 0) {
+    ctx.fillStyle = "rgba(40,42,75,.6)"; ctx.beginPath(); ctx.arc(R,R,R-6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.textAlign = "center";
+    ctx.font = "600 28px 'Apple SD Gothic Neo', sans-serif";
+    ctx.fillText("조건에 맞는 곳 없음", R, R - 10);
+    ctx.font = "400 18px 'Apple SD Gothic Neo', sans-serif"; ctx.fillStyle = "rgba(255,255,255,.45)";
+    ctx.fillText("필터를 완화하세요", R, R + 26);
+    return;
+  }
+  const arc = (Math.PI*2)/n;
+  const showLabel = n <= 22;
+  for (let i=0;i<n;i++){
+    const a0 = rotation + i*arc;
+    const a1 = a0 + arc;
+    ctx.beginPath();
+    ctx.moveTo(R,R);
+    ctx.arc(R,R,R-6,a0,a1);
+    ctx.closePath();
+    ctx.fillStyle = PALETTE[i % PALETTE.length];
+    ctx.fill();
+    ctx.strokeStyle = "rgba(15,16,32,.55)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    if (showLabel) {
+      ctx.save();
+      ctx.translate(R,R);
+      ctx.rotate(a0 + arc/2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#10121f";
+      ctx.font = "600 " + (n <= 12 ? 22 : 16) + "px 'Apple SD Gothic Neo', sans-serif";
+      let label = pool[i].name;
+      if (label.length > 9) label = label.slice(0,9) + "…";
+      ctx.fillText(label, R-28, 6);
+      ctx.restore();
+    }
+  }
+  if (!showLabel) {
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.textAlign = "center";
+    ctx.font = "700 30px 'Apple SD Gothic Neo', sans-serif";
+    ctx.fillText(n + "곳", R, R - 120);
+    ctx.font = "500 16px 'Apple SD Gothic Neo', sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,.6)";
+    ctx.fillText("돌리면 한 곳!", R, R - 92);
+  }
+}
+
+// ---- spin ----
+const spinBtn = document.getElementById("spin");
+spinBtn.onclick = () => {
+  if (spinning || pool.length === 0) return;
+  spinning = true; spinBtn.disabled = true;
+
+  const n = pool.length;
+  const arc = (Math.PI*2)/n;
+  const winnerIdx = Math.floor(Math.random()*n);
+  // pointer is at top = -90deg = 1.5*PI (3π/2). We want winner's center under pointer.
+  const pointerAngle = Math.PI * 1.5;
+  const targetCenter = winnerIdx*arc + arc/2;
+  const turns = 6 + Math.floor(Math.random()*3);
+  // final rotation so that (rotation + targetCenter) ≡ pointerAngle (mod 2π)
+  let finalRot = turns*Math.PI*2 + pointerAngle - targetCenter;
+  const startRot = rotation % (Math.PI*2);
+  const delta = finalRot - startRot;
+  const dur = 1400;
+  let t0 = null;
+  const ease = x => 1 - Math.pow(1 - x, 3.4);
+
+  function frame(ts){
+    if (t0 === null) t0 = ts;
+    const p = Math.min((ts - t0)/dur, 1);
+    rotation = startRot + delta*ease(p);
+    draw();
+    if (p < 1) requestAnimationFrame(frame);
+    else { rotation = finalRot; draw(); spinning = false; spinBtn.disabled = false; announce(pool[winnerIdx]); }
+  }
+  requestAnimationFrame(frame);
+};
+
+// ---- result + history ----
+const resultEl = document.getElementById("result");
+const histEl = document.getElementById("history");
+const hist = [];
+// 항상 카카오맵으로 열기 — 실제 가게페이지 있으면 그것, 없으면 카카오 검색
+function kakaoSearch(r){ return 'https://map.kakao.com/?q=' + encodeURIComponent(r.name); }
+function linkOf(r){ return r.kakaoPlaceUrl || r.placeUrl || kakaoSearch(r); }
+function linkLabel(r){ return '🗺️ 카카오맵에서 열기'; }
+function subOf(r){
+  if (r.address) return r.address + (r.phone ? ' · ' + r.phone : '');
+  return '좌표 ' + r.lat.toFixed(5) + ', ' + r.lon.toFixed(5) + (r.osm ? ' · OSM ' + r.osm : '');
+}
+function announce(r){
+  // 보조 링크(주 링크와 다른 지도들)
+  const primary = linkOf(r);
+  const alts = [];
+  const kakao = r.kakaoPlaceUrl || r.placeUrl;
+  if (kakao && kakao !== primary) alts.push('<a href="'+kakao+'" target="_blank" rel="noopener">카카오맵</a>');
+  const google = r.googleCidUrl || r.googleMapUrl;
+  if (google && google !== primary) alts.push('<a href="'+google+'" target="_blank" rel="noopener">구글맵</a>');
+  if (r.naverMapUrl && r.naverMapUrl !== primary) alts.push('<a href="'+r.naverMapUrl+'" target="_blank" rel="noopener">네이버</a>');
+  const stars = r.rating ? '★'.repeat(Math.round(r.rating)) + '☆'.repeat(5 - Math.round(r.rating)) : '';
+  const rating = r.rating
+    ? '<div class="rating"><span class="stars">' + stars + '</span> <b>' + r.rating.toFixed(1) + '</b> <span class="rc">리뷰 ' + (r.ratingCount || 0).toLocaleString() + '</span></div>'
+    : '<div class="rating rc-none">별점 정보 없음</div>';
+  resultEl.innerHTML =
+    '<span class="cat">' + r.category + '</span>' +
+    '<h2>' + r.name + '</h2>' +
+    rating +
+    '<div class="sig">📏 스테이트타워남산에서 직선 ' + r.distance_m + 'm</div>' +
+    '<div class="note">' + subOf(r) + '</div>' +
+    '<a class="naver" href="' + linkOf(r) + '" target="_blank" rel="noopener">' + linkLabel(r) + '</a>' +
+    (alts.length ? '<div class="alts">다른 지도: ' + alts.join(' · ') + '</div>' : '');
+  const now = new Date();
+  const tt = String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
+  hist.unshift({ r, tt });
+  if (hist.length > 8) hist.pop();
+  histEl.innerHTML = hist.map(h =>
+    '<li><span class="t">'+h.tt+'</span><a href="'+linkOf(h.r)+'" target="_blank" rel="noopener">'+h.r.name+'</a><span class="t">· '+h.r.distance_m+'m'+(h.r.rating?' · ⭐'+h.r.rating.toFixed(1):'')+'</span></li>'
+  ).join("");
+}
+
+applyFilters();
+</script>
+</body>
+</html>
